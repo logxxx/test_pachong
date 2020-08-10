@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"learn/mywebcrawler/helper/log/base"
+	"learn/mywebcrawler/helper/log/logrus"
+	"os"
 	"sync"
 )
 
@@ -34,4 +36,31 @@ func RegisterLogger(
 	}
 	loggerCreatorMap[loggerType] = creator
 	return nil
+}
+
+func DLogger() base.MyLogger {
+	return Logger(
+		base.TYPE_LOGRUS,
+		base.LEVEL_INFO,
+		base.FORMAT_TEXT,
+		os.Stdout,
+		nil)
+}
+
+func Logger(
+	loggerType base.LoggerType,
+	level base.LogLevel,
+	format base.LogFormat,
+	writer io.Writer,
+	options []base.Option) base.MyLogger {
+	var logger base.MyLogger
+	rwm.RLock()
+	creator, ok := loggerCreatorMap[loggerType]
+	rwm.RUnlock()
+	if ok {
+		logger = creator(level, format, writer, options)
+	} else {
+		logger = logrus.NewLoggerBy(level, format, writer, options)
+	}
+	return logger
 }
